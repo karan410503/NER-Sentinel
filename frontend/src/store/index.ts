@@ -42,13 +42,13 @@ interface AppState {
   vehicles: Vehicle[];
   incidents: Incident[];
   emergencyMode: boolean;
-  selectedVehicleId: string | null;
+  selectedVehicleId: string | number | null;
   focusLocation: [number, number] | null;
   setEmergencyMode: (active: boolean) => void;
-  setSelectedVehicleId: (id: string | null) => void;
+  setSelectedVehicleId: (id: string | number | null) => void;
   setFocusLocation: (loc: [number, number] | null) => void;
-  updateVehicleLocation: (id: string, location: [number, number]) => void;
-  updateVehicle: (id: string, data: Partial<Vehicle>) => void;
+  updateVehicleLocation: (id: string | number, location: [number, number]) => void;
+  updateVehicle: (id: string | number, data: Partial<Vehicle>) => void;
   addVehicle: (vehicle: Vehicle) => void;
   addIncident: (incident: Incident) => void;
   removeIncident: (id: string) => void;

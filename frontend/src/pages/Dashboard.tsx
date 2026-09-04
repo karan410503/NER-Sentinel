@@ -1,14 +1,59 @@
 import { Truck, Package, AlertTriangle, Route as RouteIcon, Map, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import NERMap from '../components/map/NERMap';
-
-const stats = [
-  { label: 'ACTIVE VEHICLES', value: '128', icon: Truck, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-  { label: 'ACTIVE DELIVERIES', value: '342', icon: Package, color: 'text-green-400', bg: 'bg-green-400/10' },
-  { label: 'BLOCKED ROADS', value: '17', icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-400/10' },
-  { label: 'HIGH-RISK ROUTES', value: '26', icon: RouteIcon, color: 'text-orange-400', bg: 'bg-orange-400/10' },
-];
+import { analyticsApi } from '../services/analyticsApi';
+import { alertsApi, type SystemAlert } from '../services/alertsApi';
 
 export default function Dashboard() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // State for dynamic stats
+  const [fleetStatus, setFleetStatus] = useState<any[]>([]);
+  const [criticalAlerts, setCriticalAlerts] = useState<SystemAlert[]>([]);
+  
+  useEffect(() => {
+    // Update clock
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    
+    // Fetch data initially
+    fetchDashboardData();
+    
+    // Poll every 10 seconds for real-time updates
+    const dataTimer = setInterval(fetchDashboardData, 10000);
+    
+    return () => {
+      clearInterval(timer);
+      clearInterval(dataTimer);
+    };
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const fleetData = await analyticsApi.getFleetStatus();
+      setFleetStatus(fleetData);
+      
+      const alerts = await alertsApi.getInitialAlerts();
+      setCriticalAlerts(alerts.slice(0, 3)); // Only show top 3 on dashboard
+    } catch (err) {
+      console.error("Failed to fetch dashboard data:", err);
+    }
+  };
+
+  // Derive top-level stats from the fetched fleetStatus
+  const activeVehicles = fleetStatus.find(f => f.name === 'Moving')?.value || 0;
+  const delayedVehicles = fleetStatus.find(f => f.name === 'Delayed')?.value || 0;
+  
+  // Since we don't have an endpoint for ALL active deliveries count right now,
+  // we'll use activeVehicles as a proxy or just sum moving + delayed
+  const activeDeliveries = activeVehicles + delayedVehicles;
+  
+  const stats = [
+    { label: 'ACTIVE VEHICLES', value: activeVehicles.toString(), icon: Truck, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { label: 'ACTIVE DELIVERIES', value: activeDeliveries.toString(), icon: Package, color: 'text-green-400', bg: 'bg-green-400/10' },
+    { label: 'INCIDENTS REPORTED', value: criticalAlerts.length.toString(), icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-400/10' },
+    { label: 'DELAYED ROUTES', value: delayedVehicles.toString(), icon: RouteIcon, color: 'text-orange-400', bg: 'bg-orange-400/10' },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -18,7 +63,9 @@ export default function Dashboard() {
         </div>
         <div className="text-right hidden sm:block">
           <div className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Local Time</div>
-          <div className="text-lg font-mono text-ner-primary">19:02:45 IST</div>
+          <div className="text-lg font-mono text-ner-primary">
+            {currentTime.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' })} IST
+          </div>
         </div>
       </div>
       
@@ -64,6 +111,7 @@ export default function Dashboard() {
               <RouteIcon className="w-4 h-4 mr-2" /> High-Risk Corridors
             </h3>
             <div className="space-y-4">
+              {/* Dynamic Risk Display (Currently hardcoded placeholder for Risk engine) */}
               {[
                 { name: 'Corridor A (NH-37)', risk: 87, trend: 'up' },
                 { name: 'Corridor B (NH-06)', risk: 74, trend: 'up' },
@@ -87,33 +135,34 @@ export default function Dashboard() {
               <Bell className="w-4 h-4 mr-2" /> Critical Alerts
             </h3>
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                <div className="flex items-start">
-                  <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 mr-2 shrink-0" />
-                  <div>
-                    <h4 className="text-sm font-medium text-red-400">NH-102 BLOCKED</h4>
-                    <p className="text-xs text-gray-400 mt-1">Landslide reported at 14:32. 4 vehicles affected.</p>
+              {criticalAlerts.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">No active critical alerts.</p>
+              ) : (
+                criticalAlerts.map(alert => (
+                  <div key={alert.id} className={`p-3 rounded-lg border ${
+                    alert.severity === 'CRITICAL' ? 'bg-red-500/10 border-red-500/20' : 
+                    alert.severity === 'WARNING' ? 'bg-orange-500/10 border-orange-500/20' : 
+                    'bg-yellow-500/10 border-yellow-500/20'
+                  }`}>
+                    <div className="flex items-start">
+                      {alert.severity === 'CRITICAL' ? (
+                        <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 mr-2 shrink-0" />
+                      ) : (
+                        <Package className="w-4 h-4 text-orange-400 mt-0.5 mr-2 shrink-0" />
+                      )}
+                      <div>
+                        <h4 className={`text-sm font-medium ${
+                          alert.severity === 'CRITICAL' ? 'text-red-400' : 
+                          alert.severity === 'WARNING' ? 'text-orange-400' : 'text-yellow-400'
+                        }`}>
+                          {alert.source.toUpperCase()}
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">{alert.message}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                <div className="flex items-start">
-                  <AlertTriangle className="w-4 h-4 text-orange-400 mt-0.5 mr-2 shrink-0" />
-                  <div>
-                    <h4 className="text-sm font-medium text-orange-400">Heavy Rainfall Warning</h4>
-                    <p className="text-xs text-gray-400 mt-1">Expected in East Siang district next 3 hours.</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                <div className="flex items-start">
-                  <Package className="w-4 h-4 text-yellow-400 mt-0.5 mr-2 shrink-0" />
-                  <div>
-                    <h4 className="text-sm font-medium text-yellow-400">Delivery Delayed</h4>
-                    <p className="text-xs text-gray-400 mt-1">Medicine delivery delayed by 46 minutes.</p>
-                  </div>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </div>
         </div>

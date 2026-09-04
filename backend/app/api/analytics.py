@@ -1,60 +1,121 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
 from app.models.analytics import DailyMetric
 from app.models.route import Route
-from app.models.incident import Incident
+from app.models.incident import Incident, IncidentType
+from app.models.vehicle import Vehicle, VehicleStatus
+from app.models.delivery import Delivery, DeliveryStatus
 
 router = APIRouter()
 
 @router.get("/delivery-performance")
 def get_delivery_performance(db: Session = Depends(get_db)):
-    metrics = db.query(DailyMetric).order_by(DailyMetric.metric_date.asc()).limit(7).all()
+    # Calculate dynamically from Deliveries
+    # For a real app, you group by date. For now, we simulate the past 7 days 
+    # based on active deliveries to show dynamic changes
     result = []
     days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    for m in metrics:
-        day_str = days[m.metric_date.weekday()]
-        result.append({
-            "day": day_str,
-            "onTime": m.on_time_deliveries,
-            "delayed": m.delayed_deliveries,
-            "critical": m.critical_deliveries
-        })
+    today = datetime.utcnow()
+    
+    for i in range(6, -1, -1):
+        target_date = today - timedelta(days=i)
+        day_str = days[target_date.weekday()]
+        
+        # If it's today, compute from real data, otherwise use some historical data
+        if i == 0:
+            on_time = db.query(Delivery).filter(Delivery.status == DeliveryStatus.DELIVERED).count() + db.query(Delivery).filter(Delivery.status == DeliveryStatus.IN_TRANSIT).count()
+            delayed = db.query(Delivery).filter(Delivery.status == DeliveryStatus.DELAYED).count()
+            critical = db.query(Delivery).filter(Delivery.priority == "EMERGENCY").count()
+            result.append({
+                "day": day_str,
+                "onTime": on_time,
+                "delayed": delayed,
+                "critical": critical
+            })
+        else:
+            # Fallback to DailyMetric for historical
+            m = db.query(DailyMetric).filter(func.date(DailyMetric.metric_date) == target_date.date()).first()
+            if m:
+                result.append({
+                    "day": day_str,
+                    "onTime": m.on_time_deliveries,
+                    "delayed": m.delayed_deliveries,
+                    "critical": m.critical_deliveries
+                })
+            else:
+                result.append({
+                    "day": day_str,
+                    "onTime": 0, "delayed": 0, "critical": 0
+                })
+                
     return result
 
 @router.get("/fleet-status")
 def get_fleet_status_analytics(db: Session = Depends(get_db)):
-    # We could aggregate live data, but for dashboard speed we use the latest daily metric
-    latest = db.query(DailyMetric).order_by(DailyMetric.metric_date.desc()).first()
-    if not latest:
-        return []
+    # Compute live from Vehicles table
+    moving = db.query(Vehicle).filter(Vehicle.status == VehicleStatus.MOVING).count()
+    idle = db.query(Vehicle).filter(Vehicle.status == VehicleStatus.IDLE).count()
+    delayed = db.query(Vehicle).filter(Vehicle.status == VehicleStatus.DELAYED).count()
+    emergency = db.query(Vehicle).filter(Vehicle.status == VehicleStatus.EMERGENCY).count()
     
     return [
-        { "name": 'Moving', "value": latest.active_vehicles, "color": '#10b981' },
-        { "name": 'Idle', "value": latest.idle_vehicles, "color": '#f59e0b' },
-        { "name": 'Delayed', "value": int(latest.delayed_deliveries * 0.5), "color": '#f97316' },
-        { "name": 'Emergency', "value": latest.critical_deliveries, "color": '#ef4444' },
+        { "name": 'Moving', "value": moving, "color": '#10b981' },
+        { "name": 'Idle', "value": idle, "color": '#f59e0b' },
+        { "name": 'Delayed', "value": delayed, "color": '#f97316' },
+        { "name": 'Emergency', "value": emergency, "color": '#ef4444' },
     ]
 
 @router.get("/incident-activity")
 def get_incident_activity(db: Session = Depends(get_db)):
-    metrics = db.query(DailyMetric).order_by(DailyMetric.metric_date.asc()).limit(7).all()
+    # Compute live from Incident table
+    landslide = db.query(Incident).filter(Incident.incident_type == IncidentType.LANDSLIDE).count()
+    flood = db.query(Incident).filter(Incident.incident_type == IncidentType.FLOOD).count()
+    roadDamage = db.query(Incident).filter(Incident.incident_type == IncidentType.ROAD_DAMAGE).count()
+    traffic = db.query(Incident).filter(Incident.incident_type == IncidentType.TRAFFIC).count()
+    weather = db.query(Incident).filter(Incident.incident_type == IncidentType.WEATHER).count()
+    
+    # We return a single today entry for the chart (or we could span it out)
+    # The frontend expects a list of days.
     result = []
     days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    for m in metrics:
-        day_str = days[m.metric_date.weekday()]
-        # Using a simplistic mock distribution derived from total_incidents
-        total = m.total_incidents
-        result.append({
-            "date": day_str,
-            "landslide": int(total * 0.2),
-            "flood": int(total * 0.1),
-            "roadDamage": int(total * 0.3),
-            "traffic": int(total * 0.4)
-        })
+    today = datetime.utcnow()
+    
+    for i in range(6, -1, -1):
+        target_date = today - timedelta(days=i)
+        day_str = days[target_date.weekday()]
+        
+        if i == 0:
+            result.append({
+                "date": day_str,
+                "landslide": landslide,
+                "flood": flood,
+                "roadDamage": roadDamage,
+                "traffic": traffic,
+                "weather": weather
+            })
+        else:
+            m = db.query(DailyMetric).filter(func.date(DailyMetric.metric_date) == target_date.date()).first()
+            if m:
+                total = m.total_incidents
+                result.append({
+                    "date": day_str,
+                    "landslide": int(total * 0.2),
+                    "flood": int(total * 0.1),
+                    "roadDamage": int(total * 0.3),
+                    "traffic": int(total * 0.4),
+                    "weather": 0
+                })
+            else:
+                result.append({
+                    "date": day_str,
+                    "landslide": 0, "flood": 0, "roadDamage": 0, "traffic": 0, "weather": 0
+                })
+                
     return result
 
 @router.get("/ai-risk-factors")
@@ -95,7 +156,7 @@ def get_route_comparison(db: Session = Depends(get_db)):
         result.append({
             "route": r.route_name,
             "distance": r.distance_km,
-            "eta": f"{r.estimated_time_minutes // 60}h {r.estimated_time_minutes % 60}m",
+            "eta": f"{int(r.estimated_time_minutes) // 60}h {int(r.estimated_time_minutes) % 60}m" if r.estimated_time_minutes else "N/A",
             "risk": int(r.risk_score),
             "recommended": idx == 0
         })

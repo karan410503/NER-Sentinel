@@ -31,6 +31,7 @@ export default function IncidentsPage() {
     type: 'Landslide',
     severity: 'CRITICAL',
     location: '24.8170, 93.9368',
+    radius: 50,
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,7 +69,7 @@ export default function IncidentsPage() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.location) return;
     
     // Parse location
@@ -77,20 +78,44 @@ export default function IncidentsPage() {
       ? [parts[0], parts[1]] 
       : [93.9368, 24.8170]; // fallback
       
-    addIncident({
-      id: `i_${Date.now()}`,
+    const payload = {
       type: formData.type,
-      severity: formData.severity as 'CRITICAL' | 'HIGH' | 'MODERATE' | 'LOW',
-      location: loc,
-      reported_by: 'Current User',
-      status: 'ACTIVE',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      glowSize: 1.2
-    });
+      severity: formData.severity === 'CRITICAL' ? 'Critical' : formData.severity === 'HIGH' ? 'High' : formData.severity === 'MODERATE' ? 'Medium' : 'Low',
+      description: `${formData.type} reported by field user.`,
+      latitude: loc[0],
+      longitude: loc[1],
+      radius_km: formData.radius,
+      reported_by: 'Current User'
+    };
     
-    setShowForm(false);
-    setFormData({ type: 'Landslide', severity: 'CRITICAL', location: '24.8170, 93.9368' });
-    setAiDetails('');
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/alerts/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        addIncident({
+          id: `i_${Date.now()}`,
+          type: formData.type,
+          severity: formData.severity as 'CRITICAL' | 'HIGH' | 'MODERATE' | 'LOW',
+          location: loc,
+          reported_by: 'Current User',
+          status: 'ACTIVE',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          glowSize: 1.2
+        });
+        
+        setShowForm(false);
+        setFormData({ type: 'Landslide', severity: 'CRITICAL', location: '24.8170, 93.9368', radius: 50 });
+        setAiDetails('');
+      } else {
+        alert("Failed to report incident to backend.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error reporting incident.");
+    }
   };
 
   return (
@@ -188,6 +213,20 @@ export default function IncidentsPage() {
                   </button>
                 </div>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Impact Radius (km)</label>
+                <div className="flex space-x-2 items-center">
+                  <input 
+                    type="range" 
+                    min="1" max="200" 
+                    value={formData.radius}
+                    onChange={e => setFormData({...formData, radius: parseInt(e.target.value)})}
+                    className="w-full accent-red-500" 
+                  />
+                  <span className="text-white font-mono text-sm w-12 text-right">{formData.radius}km</span>
+                </div>
+              </div>
+              
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1">Photo Evidence</label>
                 <label className="w-full border-2 border-dashed border-white/20 rounded-lg p-3 text-gray-400 hover:border-ner-primary/50 hover:text-ner-primary transition flex items-center justify-center bg-black/30 cursor-pointer relative overflow-hidden">

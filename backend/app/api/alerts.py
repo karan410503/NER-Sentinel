@@ -14,6 +14,7 @@ class IncidentReport(BaseModel):
     description: str
     latitude: float
     longitude: float
+    radius_km: float = 50.0 # Default radius
     reported_by: str | None = None
 
 @router.get("/")
@@ -68,6 +69,7 @@ async def report_incident(report: IncidentReport, db: Session = Depends(get_db))
         risk_level=severity_mapping.get(report.severity, RiskLevel.MODERATE),
         latitude=report.latitude,
         longitude=report.longitude,
+        geometry={"radius_km": report.radius_km},
         reported_by=report.reported_by,
         is_active=True
     )
@@ -86,6 +88,7 @@ async def report_incident(report: IncidentReport, db: Session = Depends(get_db))
             "description": report.description,
             "latitude": report.latitude,
             "longitude": report.longitude,
+            "radius_km": report.radius_km,
             "reported_by": report.reported_by
         }
     })

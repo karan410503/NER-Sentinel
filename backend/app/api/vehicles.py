@@ -30,7 +30,7 @@ def get_fleet_status(db: Session = Depends(get_db)):
     return vehicles
 
 @router.post("/assign")
-def assign_vehicle(req: VehicleAssignRequest, db: Session = Depends(get_db)):
+async def assign_vehicle(req: VehicleAssignRequest, db: Session = Depends(get_db)):
     # Geocode locations
     origin_coords = routing_service.geocode(req.current_location_name)
     if not origin_coords:
@@ -49,12 +49,13 @@ def assign_vehicle(req: VehicleAssignRequest, db: Session = Depends(get_db)):
     duration_minutes = route_data["duration_minutes"]
     
     # Calculate ETA & Risk using ML service
-    eta_predictions = ml_service.predict_eta(
+    eta_predictions = await ml_service.predict_eta(
         origin=req.current_location_name,
         destination=req.destination_name,
         vehicle_type=req.type,
         distance_km=distance_km,
-        duration_minutes=duration_minutes
+        duration_minutes=duration_minutes,
+        dest_coords=dest_coords
     )
     
     # Use timezone-aware UTC datetime
@@ -97,13 +98,13 @@ def assign_vehicle(req: VehicleAssignRequest, db: Session = Depends(get_db)):
         "duration_minutes": duration_minutes,
         "eta": eta_datetime.isoformat(),
         "eta_formatted": eta_predictions["predictedEta"],
-        "risk_score": 100 - eta_predictions["confidenceScore"],
+        "risk_score": eta_predictions.get("finalRiskScore", 100 - eta_predictions["confidenceScore"]),
         "route_geometry": route_data["geometry"],
         "status": vehicle.status.value
     }
 
 @router.post("/{vehicle_id}/reroute")
-def reroute_vehicle(vehicle_id: int, req: VehicleRerouteRequest, db: Session = Depends(get_db)):
+async def reroute_vehicle(vehicle_id: int, req: VehicleRerouteRequest, db: Session = Depends(get_db)):
     vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
@@ -126,12 +127,13 @@ def reroute_vehicle(vehicle_id: int, req: VehicleRerouteRequest, db: Session = D
     duration_minutes = route_data["duration_minutes"]
     
     # Calculate ETA & Risk using ML service
-    eta_predictions = ml_service.predict_eta(
+    eta_predictions = await ml_service.predict_eta(
         origin="Current Location",
         destination=req.new_destination,
         vehicle_type=vehicle.vehicle_type or "Heavy Truck",
         distance_km=distance_km,
-        duration_minutes=duration_minutes
+        duration_minutes=duration_minutes,
+        dest_coords=dest_coords
     )
     
     predicted_minutes = eta_predictions.get("predictedEtaMinutes", duration_minutes)
@@ -152,7 +154,7 @@ def reroute_vehicle(vehicle_id: int, req: VehicleRerouteRequest, db: Session = D
         "duration_minutes": duration_minutes,
         "eta": eta_datetime.isoformat(),
         "eta_formatted": eta_predictions["predictedEta"],
-        "risk_score": 100 - eta_predictions["confidenceScore"],
+        "risk_score": eta_predictions.get("finalRiskScore", 100 - eta_predictions["confidenceScore"]),
         "route_geometry": route_data["geometry"],
         "status": vehicle.status.value,
         "reason": req.reason
