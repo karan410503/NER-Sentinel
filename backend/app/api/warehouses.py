@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.core.database import get_db
 from app.models.warehouse import Warehouse
@@ -22,9 +22,7 @@ class WarehouseResponse(BaseModel):
     status: str
     risk_score: float
 
-    class Config:
-        orm_mode = True
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 @router.get("/", response_model=List[WarehouseResponse])
 def get_warehouses(db: Session = Depends(get_db)):
