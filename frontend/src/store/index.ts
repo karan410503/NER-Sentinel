@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { RouteData } from '../services/routeApi';
 
 export type RoutePath = [number, number][];
 
@@ -39,6 +40,10 @@ export interface Incident {
 }
 
 interface AppState {
+  routes: RouteData[];
+  selectedRouteId: number | null;
+  setRoutes: (routes: RouteData[]) => void;
+  setSelectedRouteId: (id: number | null) => void;
   vehicles: Vehicle[];
   incidents: Incident[];
   emergencyMode: boolean;
@@ -55,6 +60,10 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
+  routes: [],
+  selectedRouteId: null,
+  setRoutes: (routes) => set({ routes }),
+  setSelectedRouteId: (id) => set({ selectedRouteId: id }),
   vehicles: [
     { 
       id: 'v1', vehicle_number: 'NE-12-AB-1234', type: 'Medicine Truck', driver: 'Rahul S.', 

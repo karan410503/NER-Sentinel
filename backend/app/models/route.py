@@ -21,6 +21,16 @@ class Route(Base):
     distance_km = Column(Float)
     estimated_time_minutes = Column(Integer)
     risk_score = Column(Float, default=0.0)
+    risk_level = Column(Enum(RouteStatus), default=RouteStatus.OPEN)
+    
+    # Extended dynamic risk metrics
+    delay_minutes = Column(Integer, default=0)
+    weather_risk = Column(Float, default=0.0)
+    news_risk = Column(Float, default=0.0)
+    disaster_risk = Column(Float, default=0.0)
+    
+    # Store dynamic risk factors as JSON
+    factors = Column(JSON, nullable=True)
     
     status = Column(Enum(RouteStatus), default=RouteStatus.OPEN)
     

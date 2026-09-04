@@ -1,25 +1,61 @@
 import { Polyline } from 'react-leaflet';
 import { useAppStore } from '../../../store';
 
+function getRiskColor(riskScore: number): string {
+  if (riskScore < 30) return '#10b981'; // Green (LOW)
+  if (riskScore < 60) return '#eab308'; // Yellow (MODERATE)
+  if (riskScore < 80) return '#f97316'; // Orange (HIGH)
+  return '#ef4444'; // Red (CRITICAL)
+}
+
 export default function RoadLayer() {
-  const { selectedVehicleId, vehicles } = useAppStore();
+  const { routes, selectedRouteId, setSelectedRouteId, selectedVehicleId, vehicles } = useAppStore();
   const selectedVehicle = selectedVehicleId ? vehicles.find(v => v.id === selectedVehicleId) : null;
 
   return (
     <>
-      {/* Background routes if no vehicle is selected */}
-      {!selectedVehicle && vehicles.map((vehicle, idx) => {
-        const color = idx % 2 === 0 ? '#0ea5e9' : '#10b981'; // Alternate colors
-        if (!vehicle.currentRoute) return null;
+      {/* 1. Render all active routes from backend */}
+      {routes.map(route => {
+        const isSelected = selectedRouteId === route.id;
+        const color = getRiskColor(route.risk_score);
+        
+        // Ensure geometry is parsed properly (some DB returns [lat,lng][])
+        const positions = route.geometry as [number, number][];
+        if (!positions || positions.length === 0) return null;
+
         return (
-          <div key={`bg-route-${vehicle.id}`}>
-            <Polyline positions={vehicle.currentRoute} pathOptions={{ color: color, weight: 8, opacity: 0.15 }} />
-            <Polyline positions={vehicle.currentRoute} pathOptions={{ color: color, weight: 3, opacity: 0.8 }} />
+          <div key={`db-route-${route.id}`}>
+            {/* Wider transparent polyline for easier clicking */}
+            <Polyline 
+              positions={positions} 
+              pathOptions={{ color: 'transparent', weight: 20 }}
+              eventHandlers={{
+                click: () => setSelectedRouteId(route.id)
+              }}
+            />
+            {/* Outer Glow / Shadow */}
+            <Polyline 
+              positions={positions} 
+              pathOptions={{ 
+                color: color, 
+                weight: isSelected ? 10 : 6, 
+                opacity: isSelected ? 0.3 : 0.15 
+              }} 
+            />
+            {/* Core Line */}
+            <Polyline 
+              positions={positions} 
+              pathOptions={{ 
+                color: color, 
+                weight: isSelected ? 4 : 2, 
+                opacity: isSelected ? 1 : 0.7 
+              }} 
+            />
           </div>
         );
       })}
 
-      {/* Dynamic Route for Selected Vehicle */}
+      {/* 2. Dynamic Route for Selected Vehicle (Overrides base route coloring) */}
       {selectedVehicle && (
         <>
           {/* If the vehicle has an original route, show it as blocked/red */}

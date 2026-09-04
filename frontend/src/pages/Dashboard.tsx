@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import NERMap from '../components/map/NERMap';
 import { analyticsApi } from '../services/analyticsApi';
 import { alertsApi, type SystemAlert } from '../services/alertsApi';
+import { useAppStore } from '../store';
 
 export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -10,6 +11,10 @@ export default function Dashboard() {
   // State for dynamic stats
   const [fleetStatus, setFleetStatus] = useState<any[]>([]);
   const [criticalAlerts, setCriticalAlerts] = useState<SystemAlert[]>([]);
+  
+  // Get dynamic routes from the global store
+  const { routes } = useAppStore();
+  const setRoutes = useAppStore(state => state.setRoutes);
   
   useEffect(() => {
     // Update clock
@@ -34,6 +39,11 @@ export default function Dashboard() {
       
       const alerts = await alertsApi.getInitialAlerts();
       setCriticalAlerts(alerts.slice(0, 3)); // Only show top 3 on dashboard
+      
+      // Also fetch routes for dashboard
+      import('../services/routeApi').then(({ routeApi }) => {
+        routeApi.getAllRoutes().then(setRoutes);
+      });
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
     }
@@ -42,16 +52,18 @@ export default function Dashboard() {
   // Derive top-level stats from the fetched fleetStatus
   const activeVehicles = fleetStatus.find(f => f.name === 'Moving')?.value || 0;
   const delayedVehicles = fleetStatus.find(f => f.name === 'Delayed')?.value || 0;
-  
-  // Since we don't have an endpoint for ALL active deliveries count right now,
-  // we'll use activeVehicles as a proxy or just sum moving + delayed
   const activeDeliveries = activeVehicles + delayedVehicles;
   
+  // Derive route KPIs
+  const totalRoutes = routes.length;
+  const highRiskRoutes = routes.filter(r => r.risk_score >= 60).length;
+  const delayedRoutes = routes.filter(r => r.delay_minutes > 0).length;
+  
   const stats = [
-    { label: 'ACTIVE VEHICLES', value: activeVehicles.toString(), icon: Truck, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { label: 'ACTIVE ROUTES', value: totalRoutes.toString(), icon: RouteIcon, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { label: 'ACTIVE DELIVERIES', value: activeDeliveries.toString(), icon: Package, color: 'text-green-400', bg: 'bg-green-400/10' },
     { label: 'INCIDENTS REPORTED', value: criticalAlerts.length.toString(), icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-400/10' },
-    { label: 'DELAYED ROUTES', value: delayedVehicles.toString(), icon: RouteIcon, color: 'text-orange-400', bg: 'bg-orange-400/10' },
+    { label: 'HIGH-RISK ROUTES', value: highRiskRoutes.toString(), icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-400/10' },
   ];
 
   return (

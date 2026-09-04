@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api import predictions, deliveries, vehicles, analytics, alerts, admin, gis, ws, auth, driver, warehouses
+from app.api import predictions, deliveries, vehicles, analytics, alerts, admin, gis, ws, auth, driver, warehouses, routes
 from app.services.ml_service import ml_service
 from contextlib import asynccontextmanager
 
@@ -36,6 +36,7 @@ def health_check():
 app.include_router(predictions.router, prefix="/api/predictions", tags=["Predictions"])
 app.include_router(deliveries.router, prefix="/api/deliveries", tags=["Deliveries"])
 app.include_router(vehicles.router, prefix="/api/vehicles", tags=["Vehicles"])
+app.include_router(routes.router, prefix="/api/routes", tags=["Routes"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(alerts.router, prefix="/api/alerts", tags=["Alerts"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])

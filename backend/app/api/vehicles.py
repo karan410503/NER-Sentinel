@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 
 from app.core.database import get_db
 from app.models.vehicle import Vehicle, VehicleStatus
+from app.models.route import Route, RouteStatus
 from app.services.routing_service import routing_service
 from app.services.ml_service import ml_service
 
@@ -84,8 +85,42 @@ async def assign_vehicle(req: VehicleAssignRequest, db: Session = Depends(get_db
     # Optional: store destination coords, eta string, or risk in a JSON field if we can't alter schema
     # But vehicle model has limited fields. Let's just return it to frontend to use.
     
+    # Find or Create Route in DB so map picks it up
+    route = db.query(Route).filter(
+        Route.origin == req.current_location_name, 
+        Route.destination == req.destination_name
+    ).first()
+    
+    final_risk = eta_predictions.get("finalRiskScore", 100 - eta_predictions["confidenceScore"])
+    risk_level = RouteStatus.OPEN
+    if final_risk > 30: risk_level = RouteStatus.RESTRICTED
+    if final_risk > 60: risk_level = RouteStatus.HIGH_RISK
+    
+    if not route:
+        route = Route(
+            route_name=f"{req.current_location_name} - {req.destination_name}",
+            origin=req.current_location_name,
+            destination=req.destination_name,
+            distance_km=distance_km,
+            estimated_time_minutes=int(duration_minutes),
+            risk_score=final_risk,
+            risk_level=risk_level,
+            status=RouteStatus.OPEN,
+            geometry=route_data["geometry"],
+            factors={"Base Risk": final_risk}
+        )
+        db.add(route)
+    else:
+        route.risk_score = final_risk
+        route.risk_level = risk_level
+        route.factors = {"Base Risk": final_risk}
+        route.geometry = route_data["geometry"]
+        route.distance_km = distance_km
+        route.estimated_time_minutes = int(duration_minutes)
+
     db.commit()
     db.refresh(vehicle)
+    if route: db.refresh(route)
     
     return {
         "vehicle_id": vehicle.id,
@@ -142,6 +177,38 @@ async def reroute_vehicle(vehicle_id: int, req: VehicleRerouteRequest, db: Sessi
     vehicle.status = VehicleStatus.MOVING
     vehicle.geometry = route_data["geometry"]
     
+    final_risk = eta_predictions.get("finalRiskScore", 100 - eta_predictions["confidenceScore"])
+    risk_level = RouteStatus.OPEN
+    if final_risk > 30: risk_level = RouteStatus.RESTRICTED
+    if final_risk > 60: risk_level = RouteStatus.HIGH_RISK
+
+    route = db.query(Route).filter(
+        Route.origin == "Current Location", 
+        Route.destination == req.new_destination
+    ).first()
+    
+    if not route:
+        route = Route(
+            route_name=f"Reroute - {req.new_destination}",
+            origin="Current Location",
+            destination=req.new_destination,
+            distance_km=distance_km,
+            estimated_time_minutes=int(duration_minutes),
+            risk_score=final_risk,
+            risk_level=risk_level,
+            status=RouteStatus.OPEN,
+            geometry=route_data["geometry"],
+            factors={"Base Risk": final_risk}
+        )
+        db.add(route)
+    else:
+        route.risk_score = final_risk
+        route.risk_level = risk_level
+        route.geometry = route_data["geometry"]
+        route.distance_km = distance_km
+        route.estimated_time_minutes = int(duration_minutes)
+        route.factors = {"Base Risk": final_risk}
+
     db.commit()
     db.refresh(vehicle)
     

@@ -1,21 +1,89 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import random
+import httpx
+import time
 
 from app.core.database import SessionLocal, engine, Base
 from app.models.user import User, RoleEnum
 from app.models.vehicle import Vehicle, VehicleStatus
-from app.models.route import Route
+from app.models.route import Route, RouteStatus
 from app.models.delivery import Delivery, DeliveryStatus
 from app.models.incident import Incident, IncidentType, RiskLevel
 from app.models.analytics import DailyMetric
 from app.models.warehouse import Warehouse, WarehouseStatus
 
+CITIES = {
+    "Mumbai": (19.0760, 72.8777),
+    "Pune": (18.5204, 73.8567),
+    "Nashik": (20.0110, 73.7903),
+    "Surat": (21.1702, 72.8311),
+    "Kolhapur": (16.7050, 74.2433),
+    "Satara": (17.6805, 73.9928),
+    "Chhatrapati Sambhajinagar": (19.8762, 75.3433),
+    "Nagpur": (21.1458, 79.0882),
+    "Hyderabad": (17.3850, 78.4867),
+    "Indore": (22.7196, 75.8577),
+    "Raipur": (21.2514, 81.6296),
+    "Goa": (15.4909, 73.8278),
+    "Belagavi": (15.8497, 74.4977),
+    "Bengaluru": (12.9716, 77.5946),
+    "Chennai": (13.0827, 80.2707),
+    "Vijayawada": (16.5062, 80.6480),
+    "Ahmedabad": (23.0225, 72.5714),
+    "Delhi": (28.7041, 77.1025),
+    "Jaipur": (26.9124, 75.7873),
+    "Lucknow": (26.8467, 80.9462),
+    "Kolkata": (22.5726, 88.3639),
+    "Bhubaneswar": (20.2961, 85.8245),
+    "Guwahati": (26.1445, 91.7362),
+    "Shillong": (25.5788, 91.8933),
+    "Siliguri": (26.7271, 88.3953),
+    "Jowai": (25.4475, 92.2010)
+}
+
+ROUTE_PAIRS = [
+    ("Mumbai", "Pune"), ("Mumbai", "Nashik"), ("Mumbai", "Surat"),
+    ("Pune", "Kolhapur"), ("Pune", "Satara"), ("Pune", "Chhatrapati Sambhajinagar"),
+    ("Nashik", "Chhatrapati Sambhajinagar"),
+    ("Nagpur", "Hyderabad"), ("Nagpur", "Indore"), ("Nagpur", "Raipur"),
+    ("Kolhapur", "Goa"), ("Kolhapur", "Belagavi"),
+    ("Bengaluru", "Hyderabad"), ("Bengaluru", "Chennai"), ("Bengaluru", "Pune"),
+    ("Hyderabad", "Vijayawada"),
+    ("Ahmedabad", "Surat"), ("Ahmedabad", "Indore"),
+    ("Delhi", "Jaipur"), ("Delhi", "Ahmedabad"), ("Delhi", "Lucknow"),
+    ("Kolkata", "Bhubaneswar"),
+    ("Guwahati", "Shillong"), ("Guwahati", "Siliguri"),
+    ("Shillong", "Jowai")
+]
+
+def fetch_osrm_route(start_coords, end_coords):
+    url = f"http://router.project-osrm.org/route/v1/driving/{start_coords[1]},{start_coords[0]};{end_coords[1]},{end_coords[0]}?overview=full&geometries=geojson"
+    try:
+        resp = httpx.get(url, timeout=10.0)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data["code"] == "Ok":
+                route = data["routes"][0]
+                coords = [[c[1], c[0]] for c in route["geometry"]["coordinates"]]
+                return {
+                    "geometry": coords,
+                    "distance_km": route["distance"] / 1000.0,
+                    "duration_minutes": route["duration"] / 60.0
+                }
+    except Exception as e:
+        print(f"Error fetching route: {e}")
+    
+    # Fallback pseudo-straight line
+    return {
+        "geometry": [start_coords, end_coords],
+        "distance_km": 150.0,
+        "duration_minutes": 120.0
+    }
+
 def seed_db():
     db = SessionLocal()
     
-    # Check if we already have data
-    # Drop and recreate all tables for a fresh dynamic seed
     print("Dropping all tables...")
     Base.metadata.drop_all(bind=engine)
     print("Creating all tables...")
@@ -59,76 +127,83 @@ def seed_db():
         db.add(v)
     db.commit()
 
-    # 4. Routes
-    routes = [
-        Route(route_name="Mumbai - Pune", origin="Mumbai Central Hub", destination="Pune Distribution", distance_km=150.0, estimated_time_minutes=180, risk_score=25.0),
-        Route(route_name="Mumbai - Nashik", origin="Mumbai Central Hub", destination="Nashik Depot", distance_km=165.0, estimated_time_minutes=200, risk_score=30.0),
-        Route(route_name="Pune - Bengaluru", origin="Pune Distribution", destination="Bengaluru Gateway", distance_km=840.0, estimated_time_minutes=850, risk_score=45.0),
-    ]
-    for r in routes:
-        db.add(r)
+    # 4. Realistic Expanded Routes
+    print("Fetching realistic route geometries from OSRM... This may take a minute.")
+    db_routes = []
+    for origin, dest in ROUTE_PAIRS:
+        origin_coords = CITIES[origin]
+        dest_coords = CITIES[dest]
+        
+        r_data = fetch_osrm_route(origin_coords, dest_coords)
+        time.sleep(0.5) # OSRM rate limit
+        
+        # Simulate some baseline risk 
+        base_risk = random.randint(10, 45)
+        risk_level = RouteStatus.OPEN
+        if base_risk > 30: risk_level = RouteStatus.RESTRICTED
+        if base_risk > 60: risk_level = RouteStatus.HIGH_RISK
+        
+        route = Route(
+            route_name=f"{origin} - {dest}",
+            origin=origin,
+            destination=dest,
+            distance_km=r_data["distance_km"],
+            estimated_time_minutes=int(r_data["duration_minutes"]),
+            risk_score=float(base_risk),
+            risk_level=risk_level,
+            weather_risk=random.randint(0, 15),
+            news_risk=0,
+            disaster_risk=0,
+            status=RouteStatus.OPEN,
+            geometry=r_data["geometry"],
+            factors={"Base Risk": base_risk}
+        )
+        db_routes.append(route)
+        db.add(route)
+    
     db.commit()
 
     # 5. Deliveries
     deliveries = [
         Delivery(
             delivery_number="DEL-9921", cargo_type="Medical Supplies", priority="EMERGENCY",
-            origin="Mumbai Central Hub", destination="Pune Distribution",
+            origin="Mumbai", destination="Pune",
             origin_lat=19.0760, origin_lng=72.8777, destination_lat=18.5204, destination_lng=73.8567,
-            vehicle_id=vehicles[0].id, route_id=routes[0].id,
+            vehicle_id=vehicles[0].id, route_id=db_routes[0].id,
             status=DeliveryStatus.IN_TRANSIT, progress_percentage=68.0,
             estimated_arrival=datetime.utcnow() + timedelta(hours=1, minutes=15)
         ),
         Delivery(
             delivery_number="DEL-9922", cargo_type="Food Relief", priority="HIGH",
-            origin="Mumbai Central Hub", destination="Nashik Depot",
+            origin="Mumbai", destination="Nashik",
             origin_lat=19.0760, origin_lng=72.8777, destination_lat=20.0110, destination_lng=73.7903,
-            vehicle_id=vehicles[4].id, route_id=routes[1].id,
+            vehicle_id=vehicles[4].id, route_id=db_routes[1].id,
             status=DeliveryStatus.DELAYED, progress_percentage=42.0,
             estimated_arrival=datetime.utcnow() + timedelta(hours=4, minutes=30)
-        ),
-        Delivery(
-            delivery_number="DEL-9923", cargo_type="Electronics", priority="NORMAL",
-            origin="Pune Distribution", destination="Bengaluru Gateway",
-            origin_lat=18.5204, origin_lng=73.8567, destination_lat=12.9716, destination_lng=77.5946,
-            vehicle_id=vehicles[3].id, route_id=routes[2].id,
-            status=DeliveryStatus.IN_TRANSIT, progress_percentage=15.0,
-            estimated_arrival=datetime.utcnow() + timedelta(hours=12)
-        ),
-        Delivery(
-            delivery_number="DEL-9926", cargo_type="General Cargo", priority="NORMAL",
-            origin="Nagpur Logistics", destination="Pune Distribution",
-            origin_lat=21.1458, origin_lng=79.0882, destination_lat=18.5204, destination_lng=73.8567,
-            vehicle_id=vehicles[1].id, route_id=None,
-            status=DeliveryStatus.DELIVERED, progress_percentage=100.0,
-            actual_arrival=datetime.utcnow() - timedelta(hours=1)
-        ),
+        )
     ]
     for d in deliveries:
         db.add(d)
         
-    # 5. Incidents
+    # 6. Incidents
     incidents = [
         Incident(
-            title="NH-06 Blocked", incident_type=IncidentType.LANDSLIDE, location="Sonapur, Meghalaya",
-            risk_level=RiskLevel.CRITICAL, description="Heavy landslide blocking both lanes.",
-            probability=95, timeframe="Now", is_active=True
+            title="NH-48 Waterlogging", incident_type=IncidentType.FLOOD, location="Navi Mumbai",
+            risk_level=RiskLevel.HIGH, description="Severe waterlogging causing slow traffic.",
+            probability=85, timeframe="Now", is_active=True,
+            latitude=19.0330, longitude=73.0297, geometry={"radius_km": 30.0}
         ),
         Incident(
-            title="Heavy Rainfall Warning", incident_type=IncidentType.WEATHER, location="Cachar District",
-            risk_level=RiskLevel.HIGH, description="IMD red alert for extreme rainfall.",
-            probability=85, timeframe="+2 Hours", is_active=True
-        ),
-        Incident(
-            title="Bridge Maintenance", incident_type=IncidentType.ROAD_DAMAGE, location="Saraighat Bridge",
-            risk_level=RiskLevel.MODERATE, description="Single lane traffic due to repair work.",
-            probability=100, timeframe="+12 Hours", is_active=True
+            title="Expressway Blocked", incident_type=IncidentType.ROAD_DAMAGE, location="Khandala",
+            risk_level=RiskLevel.CRITICAL, description="Landslide blocking lanes.",
+            probability=95, timeframe="Now", is_active=True,
+            latitude=18.7562, longitude=73.3768, geometry={"radius_km": 15.0}
         )
     ]
     for i in incidents:
         db.add(i)
         
-    # 6. Analytics (Last 7 Days)
+    # 7. Analytics
     today = datetime.utcnow().date()
     for i in range(7):
         date = today - timedelta(days=6-i)

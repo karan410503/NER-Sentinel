@@ -9,6 +9,7 @@ import IncidentLayer from './layers/IncidentLayer';
 import RiskZoneLayer from './layers/RiskZoneLayer';
 import MapControls from './controls/MapControls';
 import MapLegend from './controls/MapLegend';
+import RouteDetailsPanel from './controls/RouteDetailsPanel';
 import { useVehicleSimulation } from '../../hooks/useVehicleSimulation';
 import { useWebSocket } from '../../hooks/useWebSocket';
 
@@ -42,10 +43,17 @@ export default function NERMap() {
   // Use the simulation for moving vehicles
   useVehicleSimulation();
   
-  // Setup WebSocket connection to the backend
   const { data: wsData } = useWebSocket('ws://localhost:8000/ws/map');
   const updateVehicleLocation = useAppStore(state => state.updateVehicleLocation);
+  const setRoutes = useAppStore(state => state.setRoutes);
   
+  useEffect(() => {
+    // Fetch routes on mount
+    import('../../services/routeApi').then(({ routeApi }) => {
+      routeApi.getAllRoutes().then(setRoutes);
+    });
+  }, [setRoutes]);
+
   useEffect(() => {
     // If we receive real-time vehicle updates from the backend WS
     if (wsData && wsData.type === 'VEHICLE_UPDATE') {
@@ -95,6 +103,7 @@ export default function NERMap() {
       {/* Custom Controls Overlays */}
       <MapControls activeLayers={activeLayers} toggleLayer={toggleLayer} />
       <MapLegend />
+      <RouteDetailsPanel />
     </div>
   );
 }
