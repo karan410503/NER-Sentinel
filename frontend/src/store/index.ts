@@ -3,13 +3,16 @@ import { create } from 'zustand';
 export type RoutePath = [number, number][];
 
 export interface Vehicle {
-  id: string;
+  id: string | number;
   vehicle_number: string;
   type: string;
   driver: string;
   status: 'MOVING' | 'IDLE' | 'STOPPED' | 'EMERGENCY' | 'REROUTING';
   location: [number, number]; // [lat, lng]
   destination: [number, number]; // [lat, lng]
+  destination_name?: string;
+  origin_name?: string;
+  distance?: number;
   speed: number;
   eta: string;
   risk: number;
@@ -72,10 +75,10 @@ export const useAppStore = create<AppState>((set) => ({
   setSelectedVehicleId: (id) => set({ selectedVehicleId: id }),
   setFocusLocation: (loc) => set({ focusLocation: loc }),
   updateVehicleLocation: (id, location) => set((state) => ({
-    vehicles: state.vehicles.map(v => v.id === id ? { ...v, location } : v)
+    vehicles: state.vehicles.map(v => String(v.id) === String(id) ? { ...v, location } : v)
   })),
   updateVehicle: (id, data) => set((state) => ({
-    vehicles: state.vehicles.map(v => v.id === id ? { ...v, ...data } : v)
+    vehicles: state.vehicles.map(v => String(v.id) === String(id) ? { ...v, ...data } : v)
   })),
   addVehicle: (vehicle) => set((state) => ({
     vehicles: [vehicle, ...state.vehicles]

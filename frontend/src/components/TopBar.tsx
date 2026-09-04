@@ -105,7 +105,7 @@ export default function TopBar() {
           )}
         </button>
         
-        <Link to="/ai-analysis" className="relative p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/5 transition-colors">
+        <Link to="/admin/ai-analysis" className="relative p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/5 transition-colors">
           <Activity className="w-5 h-5" />
         </Link>
         

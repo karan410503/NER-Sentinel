@@ -22,13 +22,14 @@ export default function Login() {
       formData.append('username', email);
       formData.append('password', password);
 
-      const res = await axios.post('http://127.0.0.1:8000/api/auth/login/access-token', formData, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+      const res = await axios.post(`${apiUrl}/api/auth/login/access-token`, formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       
       const token = res.data.access_token;
       
-      const meRes = await axios.get('http://127.0.0.1:8000/api/auth/me', {
+      const meRes = await axios.get(`${apiUrl}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

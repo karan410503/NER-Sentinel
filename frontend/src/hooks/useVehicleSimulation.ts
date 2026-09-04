@@ -65,24 +65,12 @@ export function useVehicleSimulation() {
 
       currentVehicles.forEach(vehicle => {
         // --- Initialization logic: Fetch real road if not initialized ---
-        if (!vehicle.isInitialized && !fetchingRoutes.current.has(vehicle.id + '-init')) {
-          fetchingRoutes.current.add(vehicle.id + '-init');
-          
-          fetchRouteFromOSRM(vehicle.location, vehicle.destination).then(routeData => {
-            if (routeData) {
-              updateVehicle(vehicle.id, {
-                isInitialized: true,
-                currentRoute: routeData.coords,
-                eta: formatDuration(routeData.duration),
-                targetPointIndex: 1,
-                progress: 0
-              });
-            } else {
-              // fallback to straight line
-              updateVehicle(vehicle.id, { isInitialized: true });
-            }
-          });
-          return; // Skip animation until initialized
+        if (!vehicle.isInitialized) {
+          // If we assign a vehicle from backend, it comes with `isInitialized: true`
+          // and `currentRoute` populated. For mock vehicles, we just mark them initialized 
+          // to skip the old frontend OSRM fetch.
+          updateVehicle(vehicle.id, { isInitialized: true });
+          return;
         }
 
         if (!vehicle.isInitialized) return;
@@ -135,32 +123,12 @@ export function useVehicleSimulation() {
             const distToInc = getDistance(location[0], location[1], inc.location[0], inc.location[1]);
             return distToInc < 15;
           });
-
-          if (incidentAhead && !fetchingRoutes.current.has(vehicle.id + '-reroute')) {
-            fetchingRoutes.current.add(vehicle.id + '-reroute');
+          if (incidentAhead) {
+            // Now the reroute is handled by the backend API and modal in Vehicles.tsx
+            // The simulation just stops the vehicle here if there's an incident and we haven't manually rerouted yet.
+            // In a fully autonomous system, this would call the API. Here we just halt it to prompt user action.
             updateVehicle(vehicle.id, {
               status: 'REROUTING' // Halts vehicle temporarily
-            });
-            
-            fetchRouteFromOSRM(location, vehicle.destination).then(routeData => {
-              if (routeData) {
-                updateVehicle(vehicle.id, {
-                  isRerouted: true,
-                  status: 'MOVING',
-                  originalRoute: currentRoute, // Save original route to display as blocked
-                  currentRoute: routeData.coords,
-                  eta: formatDuration(routeData.duration),
-                  targetPointIndex: 1,
-                  progress: 0,
-                  location: routeData.coords[0]
-                });
-              } else {
-                // Fallback if API fails
-                updateVehicle(vehicle.id, {
-                  isRerouted: true,
-                  status: 'MOVING'
-                });
-              }
             });
             return;
           }

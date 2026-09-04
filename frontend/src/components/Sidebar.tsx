@@ -6,17 +6,17 @@ import {
 import { useAppStore } from '../store';
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/map', label: 'Live Map', icon: Map },
-  { path: '/vehicles', label: 'Vehicles', icon: Truck },
-  { path: '/routes', label: 'Routes', icon: Route },
-  { path: '/deliveries', label: 'Deliveries', icon: Package },
-  { path: '/incidents', label: 'Incidents', icon: AlertTriangle },
-  { path: '/predictions', label: 'Predictions', icon: BrainCircuit },
-  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { path: '/alerts', label: 'Alerts', icon: Bell },
-  { path: '/emergency', label: 'Emergency Mode', icon: ShieldAlert, color: 'text-red-400' },
-  { path: '/administration', label: 'Administration', icon: Settings, divider: true },
+  { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/admin/map', label: 'Live Map', icon: Map },
+  { path: '/admin/vehicles', label: 'Vehicles', icon: Truck },
+  { path: '/admin/routes', label: 'Routes', icon: Route },
+  { path: '/admin/deliveries', label: 'Deliveries', icon: Package },
+  { path: '/admin/incidents', label: 'Incidents', icon: AlertTriangle },
+  { path: '/admin/predictions', label: 'Predictions', icon: BrainCircuit },
+  { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { path: '/admin/alerts', label: 'Alerts', icon: Bell },
+  { path: '/admin/emergency', label: 'Emergency Mode', icon: ShieldAlert, color: 'text-red-400' },
+  { path: '/admin/administration', label: 'Administration', icon: Settings, divider: true },
 ];
 
 export default function Sidebar() {

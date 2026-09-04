@@ -29,15 +29,13 @@ class MLService:
             self.disruption_model.load_model(disruption_model_path)
             print("Loaded Disruption Model.")
 
-    def predict_eta(self, origin: str, destination: str, vehicle_type: str):
-        # We don't have real distance in input, so we mock it based on locations
-        base_distance = 150.0
-        if "Shillong" in destination or "Tawang" in destination:
-            base_distance = 300.0
+    def predict_eta(self, origin: str, destination: str, vehicle_type: str, distance_km: float = 150.0, duration_minutes: float = 200.0):
+        # We use the real distance passed from routing service
+        base_distance = distance_km
             
         weather_severity = 3.0  # mock current weather
         terrain_complexity = 5.0
-        if "Shillong" in destination or "Tawang" in destination:
+        if "Shillong" in destination or "Tawang" in destination or "Kohima" in destination:
             terrain_complexity = 8.0
             weather_severity = 6.0
             
@@ -49,18 +47,20 @@ class MLService:
         # We need a DMatrix for Booster predictions
         dmatrix = xgb.DMatrix(features, feature_names=feature_names)
         
-        predicted_eta_minutes = base_distance / 40.0 * 60  # default fallback
+        predicted_eta_minutes = duration_minutes  # default fallback to router duration
         confidence = 75
         
         if self.eta_model:
+            # Predict delta or total? The existing code assumes model predicts total duration
             predicted_eta_minutes = self.eta_model.predict(dmatrix)[0]
             confidence = min(98, max(50, 95 - int(weather_severity * 2)))
         
-        # Standard ETA based on simple math
-        standard_eta = base_distance / 40.0 * 60
+        # Standard ETA based on routing duration
+        standard_eta = duration_minutes
         
         return {
             "predictedEta": f"{int(predicted_eta_minutes // 60)}h {int(predicted_eta_minutes % 60)}m",
+            "predictedEtaMinutes": int(predicted_eta_minutes),
             "standardEta": f"{int(standard_eta // 60)}h {int(standard_eta % 60)}m",
             "confidenceScore": confidence,
             "factors": [
