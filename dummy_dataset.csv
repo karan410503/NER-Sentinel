@@ -1,0 +1,101 @@
+origin,destination,vehicle_type,vehicle_type_encoded,base_distance_km,weather_severity,terrain_complexity,actual_eta_minutes,has_disruption
+Guwahati Hub,Shillong Medical Center,Light Vehicle (Fast Relief),2,173.76,3.54,7.55,325.12,0
+Tezpur Hub,Shillong Medical Center,Light Vehicle (Fast Relief),2,239.86,2.49,8.38,399.33,0
+Guwahati Hub,Kohima Health,Heavy Truck (Medicine),0,372.21,4.16,2.37,585.27,0
+Jorhat Hub,Shillong Medical Center,Heavy Truck (Medicine),0,364.16,1.6,6.38,594.29,0
+Jorhat Hub,Shillong Medical Center,Heavy Truck (Medicine),0,220.97,5.5,5.84,409.66,1
+Guwahati Hub,Imphal Care,Light Vehicle (Fast Relief),2,106.17,1.11,3.72,173.1,0
+Tezpur Hub,Aizawl Hospital,Light Vehicle (Fast Relief),2,136.53,5.1,5.67,256.63,0
+Guwahati Hub,Tawang Clinic,Heavy Truck (Medicine),0,221.06,1.77,3.37,368.25,1
+Jorhat Hub,Tawang Clinic,Light Vehicle (Fast Relief),2,170.14,1.98,9.66,285.72,0
+Silchar Hub,Kohima Health,Light Vehicle (Fast Relief),2,160.16,3.76,1.46,266.23,0
+Tezpur Hub,Tawang Clinic,Light Vehicle (Fast Relief),2,195.93,5.43,7.08,337.24,0
+Jorhat Hub,Imphal Care,Medium Truck (Food Supply),1,79.78,0.85,5.21,133.45,0
+Silchar Hub,Imphal Care,Medium Truck (Food Supply),1,448.11,3.58,2.31,695.43,1
+Tezpur Hub,Kohima Health,Medium Truck (Food Supply),1,386.16,2.73,0.62,606.48,0
+Silchar Hub,Kohima Health,Medium Truck (Food Supply),1,90.91,1.34,3.92,160.65,0
+Dibrugarh Hub,Kohima Health,Heavy Truck (Medicine),0,223.15,3.53,1.15,356.83,1
+Tezpur Hub,Shillong Medical Center,Light Vehicle (Fast Relief),2,374.32,1.33,5.97,569.1,1
+Jorhat Hub,Shillong Medical Center,Medium Truck (Food Supply),1,245.64,3.26,2.25,406.81,0
+Jorhat Hub,Kohima Health,Heavy Truck (Medicine),0,278.46,1.66,5.2,466.54,0
+Tezpur Hub,Kohima Health,Heavy Truck (Medicine),0,118.78,2.08,3.2,189.51,0
+Tezpur Hub,Shillong Medical Center,Light Vehicle (Fast Relief),2,195.87,2.63,10.0,341.19,0
+Jorhat Hub,Tawang Clinic,Heavy Truck (Medicine),0,158.39,3.9,6.26,292.52,0
+Guwahati Hub,Kohima Health,Heavy Truck (Medicine),0,107.78,1.54,0.5,178.39,0
+Tezpur Hub,Imphal Care,Heavy Truck (Medicine),0,468.01,3.06,3.1,715.94,0
+Dibrugarh Hub,Aizawl Hospital,Medium Truck (Food Supply),1,454.83,2.03,1.56,703.45,1
+Guwahati Hub,Kohima Health,Light Vehicle (Fast Relief),2,153.55,1.84,3.14,254.61,0
+Silchar Hub,Shillong Medical Center,Heavy Truck (Medicine),0,436.84,3.68,8.33,725.09,0
+Silchar Hub,Kohima Health,Heavy Truck (Medicine),0,375.51,2.02,4.94,587.4,1
+Dibrugarh Hub,Imphal Care,Heavy Truck (Medicine),0,92.45,1.86,1.99,149.79,0
+Guwahati Hub,Shillong Medical Center,Heavy Truck (Medicine),0,231.18,2.84,4.88,415.27,1
+Silchar Hub,Kohima Health,Medium Truck (Food Supply),1,113.08,1.0,3.9,204.98,0
+Guwahati Hub,Imphal Care,Light Vehicle (Fast Relief),2,94.06,2.08,1.56,140.88,1
+Guwahati Hub,Tawang Clinic,Heavy Truck (Medicine),0,232.89,3.1,3.03,389.68,0
+Silchar Hub,Imphal Care,Heavy Truck (Medicine),0,493.39,0.44,2.67,781.55,0
+Dibrugarh Hub,Kohima Health,Light Vehicle (Fast Relief),2,373.28,1.25,3.94,588.39,0
+Tezpur Hub,Kohima Health,Heavy Truck (Medicine),0,386.59,2.11,5.48,627.36,0
+Tezpur Hub,Tawang Clinic,Heavy Truck (Medicine),0,482.35,3.58,8.12,791.58,0
+Silchar Hub,Imphal Care,Heavy Truck (Medicine),0,473.72,6.52,0.62,753.91,1
+Guwahati Hub,Imphal Care,Light Vehicle (Fast Relief),2,312.65,1.62,0.0,472.09,0
+Jorhat Hub,Tawang Clinic,Medium Truck (Food Supply),1,228.1,0.69,6.2,357.48,0
+Guwahati Hub,Shillong Medical Center,Medium Truck (Food Supply),1,329.52,0.77,6.15,518.39,0
+Tezpur Hub,Aizawl Hospital,Heavy Truck (Medicine),0,469.97,1.74,6.01,724.1,1
+Silchar Hub,Imphal Care,Light Vehicle (Fast Relief),2,366.59,5.43,0.0,548.47,0
+Guwahati Hub,Kohima Health,Medium Truck (Food Supply),1,469.29,0.62,6.26,748.83,1
+Guwahati Hub,Kohima Health,Heavy Truck (Medicine),0,172.56,2.36,0.48,264.09,1
+Jorhat Hub,Kohima Health,Medium Truck (Food Supply),1,163.0,3.13,3.54,273.41,0
+Jorhat Hub,Shillong Medical Center,Heavy Truck (Medicine),0,200.1,1.53,10.0,387.29,1
+Dibrugarh Hub,Kohima Health,Light Vehicle (Fast Relief),2,242.46,3.87,3.79,394.76,0
+Silchar Hub,Kohima Health,Heavy Truck (Medicine),0,425.57,4.85,2.02,679.56,1
+Jorhat Hub,Aizawl Hospital,Heavy Truck (Medicine),0,454.52,0.96,3.38,715.17,1
+Tezpur Hub,Imphal Care,Light Vehicle (Fast Relief),2,387.26,3.66,4.31,607.19,1
+Silchar Hub,Imphal Care,Heavy Truck (Medicine),0,130.71,2.98,6.11,233.96,1
+Silchar Hub,Aizawl Hospital,Heavy Truck (Medicine),0,404.32,2.24,6.16,670.08,0
+Silchar Hub,Tawang Clinic,Medium Truck (Food Supply),1,207.35,1.64,8.74,324.89,1
+Silchar Hub,Imphal Care,Medium Truck (Food Supply),1,175.37,4.61,6.12,323.7,1
+Tezpur Hub,Imphal Care,Light Vehicle (Fast Relief),2,491.52,0.98,0.0,734.18,0
+Jorhat Hub,Tawang Clinic,Light Vehicle (Fast Relief),2,483.14,1.79,6.91,761.55,0
+Jorhat Hub,Imphal Care,Light Vehicle (Fast Relief),2,492.91,3.43,6.2,796.49,1
+Guwahati Hub,Imphal Care,Heavy Truck (Medicine),0,283.96,2.75,4.06,443.38,0
+Silchar Hub,Aizawl Hospital,Medium Truck (Food Supply),1,81.49,4.43,2.08,144.8,0
+Guwahati Hub,Aizawl Hospital,Light Vehicle (Fast Relief),2,189.18,1.33,1.3,302.58,0
+Silchar Hub,Tawang Clinic,Medium Truck (Food Supply),1,349.22,4.01,4.59,581.54,1
+Tezpur Hub,Aizawl Hospital,Medium Truck (Food Supply),1,296.57,3.23,4.64,480.97,0
+Tezpur Hub,Kohima Health,Light Vehicle (Fast Relief),2,195.01,2.92,0.2,315.78,0
+Silchar Hub,Shillong Medical Center,Medium Truck (Food Supply),1,281.95,1.14,5.79,440.53,0
+Silchar Hub,Aizawl Hospital,Heavy Truck (Medicine),0,412.95,3.42,3.37,663.9,0
+Tezpur Hub,Shillong Medical Center,Medium Truck (Food Supply),1,236.5,1.7,6.1,379.72,0
+Dibrugarh Hub,Imphal Care,Heavy Truck (Medicine),0,116.41,8.01,1.39,211.67,0
+Guwahati Hub,Imphal Care,Heavy Truck (Medicine),0,129.15,1.32,5.33,222.87,1
+Silchar Hub,Shillong Medical Center,Medium Truck (Food Supply),1,110.0,1.25,4.6,193.16,0
+Jorhat Hub,Imphal Care,Light Vehicle (Fast Relief),2,416.75,3.37,4.64,645.98,0
+Dibrugarh Hub,Tawang Clinic,Light Vehicle (Fast Relief),2,437.67,0.34,3.82,677.43,0
+Jorhat Hub,Kohima Health,Medium Truck (Food Supply),1,332.04,1.59,2.88,523.93,0
+Jorhat Hub,Aizawl Hospital,Medium Truck (Food Supply),1,451.86,2.62,4.0,712.04,0
+Silchar Hub,Tawang Clinic,Heavy Truck (Medicine),0,236.69,2.49,5.91,414.99,1
+Dibrugarh Hub,Imphal Care,Light Vehicle (Fast Relief),2,475.73,0.69,7.09,742.09,0
+Dibrugarh Hub,Shillong Medical Center,Medium Truck (Food Supply),1,184.38,4.6,3.75,337.8,0
+Tezpur Hub,Kohima Health,Light Vehicle (Fast Relief),2,454.02,5.41,1.41,713.2,0
+Dibrugarh Hub,Aizawl Hospital,Light Vehicle (Fast Relief),2,355.61,2.61,2.01,557.57,0
+Silchar Hub,Kohima Health,Light Vehicle (Fast Relief),2,62.13,0.68,0.97,111.44,1
+Dibrugarh Hub,Tawang Clinic,Medium Truck (Food Supply),1,131.78,0.47,6.89,238.6,0
+Jorhat Hub,Imphal Care,Medium Truck (Food Supply),1,388.4,1.27,3.75,593.78,1
+Guwahati Hub,Kohima Health,Heavy Truck (Medicine),0,499.96,3.27,1.3,797.86,0
+Guwahati Hub,Shillong Medical Center,Heavy Truck (Medicine),0,139.71,1.19,8.14,256.24,1
+Guwahati Hub,Kohima Health,Heavy Truck (Medicine),0,259.27,1.08,2.92,424.52,0
+Guwahati Hub,Tawang Clinic,Medium Truck (Food Supply),1,98.64,3.25,8.71,200.87,0
+Dibrugarh Hub,Imphal Care,Light Vehicle (Fast Relief),2,139.25,2.19,0.0,204.38,0
+Jorhat Hub,Kohima Health,Heavy Truck (Medicine),0,408.3,3.05,2.47,644.68,0
+Jorhat Hub,Shillong Medical Center,Light Vehicle (Fast Relief),2,341.39,4.04,9.08,560.77,1
+Dibrugarh Hub,Aizawl Hospital,Light Vehicle (Fast Relief),2,451.21,1.84,1.88,693.84,0
+Tezpur Hub,Aizawl Hospital,Light Vehicle (Fast Relief),2,413.69,2.34,0.77,630.46,0
+Tezpur Hub,Aizawl Hospital,Medium Truck (Food Supply),1,433.27,1.75,3.41,667.12,0
+Silchar Hub,Imphal Care,Light Vehicle (Fast Relief),2,324.65,2.67,2.65,510.79,0
+Silchar Hub,Imphal Care,Heavy Truck (Medicine),0,209.67,2.39,2.92,357.66,0
+Jorhat Hub,Kohima Health,Heavy Truck (Medicine),0,282.48,3.26,3.54,474.47,0
+Tezpur Hub,Tawang Clinic,Light Vehicle (Fast Relief),2,264.24,4.43,6.48,422.09,1
+Jorhat Hub,Tawang Clinic,Medium Truck (Food Supply),1,361.3,3.86,6.09,605.58,0
+Tezpur Hub,Aizawl Hospital,Medium Truck (Food Supply),1,498.48,0.96,1.23,753.58,0
+Jorhat Hub,Aizawl Hospital,Heavy Truck (Medicine),0,104.3,2.09,3.36,194.3,0
+Silchar Hub,Tawang Clinic,Heavy Truck (Medicine),0,382.37,1.66,6.56,635.27,0
