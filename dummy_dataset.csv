@@ -1,5 +1,5 @@
 origin,destination,vehicle_type,vehicle_type_encoded,base_distance_km,weather_severity,terrain_complexity,actual_eta_minutes,has_disruption
-Guwahati Hub,Shillong Medical Centre,Light Vehicle (Fast Relief),2,173.76,3.54,7.55,325.12,0
+Guwahati Hub,Shillong Medical Center,Light Vehicle (Fast Relief),2,173.76,3.54,7.55,325.12,0
 Tezpur Hub,Shillong Medical Center,Light Vehicle (Fast Relief),2,239.86,2.49,8.38,399.33,0
 Guwahati Hub,Kohima Health,Heavy Truck (Medicine),0,372.21,4.16,2.37,585.27,0
 Jorhat Hub,Shillong Medical Center,Heavy Truck (Medicine),0,364.16,1.6,6.38,594.29,0
@@ -98,4 +98,3 @@ Tezpur Hub,Tawang Clinic,Light Vehicle (Fast Relief),2,264.24,4.43,6.48,422.09,1
 Jorhat Hub,Tawang Clinic,Medium Truck (Food Supply),1,361.3,3.86,6.09,605.58,0
 Tezpur Hub,Aizawl Hospital,Medium Truck (Food Supply),1,498.48,0.96,1.23,753.58,0
 Jorhat Hub,Aizawl Hospital,Heavy Truck (Medicine),0,104.3,2.09,3.36,194.3,0
-Silchar Hub,Tawang Clinic,Heavy Truck (Medicine),0,382.37,1.66,6.56,635.27,0
