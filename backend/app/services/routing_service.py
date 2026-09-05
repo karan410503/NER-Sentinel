@@ -6,13 +6,33 @@ class RoutingService:
         self.nominatim_url = "https://nominatim.openstreetmap.org/search"
         self.osrm_url = "http://router.project-osrm.org/route/v1/driving"
         self.headers = {
-            "User-Agent": "NERSentinelApp/1.0 (contact@example.com)"
+            "User-Agent": "NERSentinelApp/1.0 (https://github.com/NER-Sentinel; contact@example.com)"
+        }
+        
+        self.geocode_cache = {}
+        
+        # Pre-seed known locations to avoid unnecessary API calls
+        self.location_registry = {
+            "Shillong Medical Center": (25.5788, 91.8933),
+            "Kohima Health": (25.6701, 94.1077),
+            "Guwahati Hub": (26.1445, 91.7362),
+            "Silchar Hospital": (24.8333, 92.7789),
+            "Current Location": (26.1445, 91.7362)
         }
 
     def geocode(self, location_name: str) -> Optional[Tuple[float, float]]:
         """
         Convert a location name into (latitude, longitude) using Nominatim.
         """
+        # 1. Check Pre-seeded Registry
+        for key, coords in self.location_registry.items():
+            if key.lower() in location_name.lower():
+                return coords
+                
+        # 2. Check In-Memory Cache
+        if location_name in self.geocode_cache:
+            return self.geocode_cache[location_name]
+            
         try:
             params = {
                 "q": location_name,
@@ -29,6 +49,8 @@ class RoutingService:
                     # Nominatim returns strings for lat/lon
                     lat = float(data[0]["lat"])
                     lng = float(data[0]["lon"])
+                    
+                    self.geocode_cache[location_name] = (lat, lng)
                     return (lat, lng)
             return None
         except Exception as e:

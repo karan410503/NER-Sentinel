@@ -84,12 +84,26 @@ async def simulate_incident(req: SimulateIncidentRequest, db: Session = Depends(
         
         if is_affected:
             affected_count += 1
+            # Cap processing to 5 vehicles to keep API snappy for the dashboard
+            if affected_count > 5:
+                continue
+                
             route = db.query(Route).filter(Route.id == v.current_route_id).first()
             if route:
                 orig_coords = (v.current_latitude, v.current_longitude)
-                dest_coords = routing_service.geocode(route.destination)
+                
+                # 3. Prefer existing coordinates to avoid geocoding
+                dest_coords = None
+                if route.geometry and len(route.geometry) > 0:
+                    last_pt = route.geometry[-1]
+                    if len(last_pt) >= 2:
+                        dest_coords = (float(last_pt[0]), float(last_pt[1]))
+                        
+                if not dest_coords:
+                    dest_coords = routing_service.geocode(route.destination)
                 
                 if not dest_coords:
+                    print(f"Warning: Geocoding failed for {route.destination}. Using fallback coords.")
                     dest_coords = (orig_coords[0] + 0.5, orig_coords[1] + 0.5)
                     
                 alt_route_info = routing_service.get_route(orig_coords, dest_coords)

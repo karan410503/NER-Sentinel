@@ -13,16 +13,22 @@ export default function IncidentReportModal({ isOpen, onClose, onSubmit, current
   const [type, setType] = useState('LANDSLIDE');
   const [severity, setSeverity] = useState('MODERATE');
   const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ incident_type: type, severity, description });
-    // Reset form
-    setType('LANDSLIDE');
-    setSeverity('MODERATE');
-    setDescription('');
+    setIsSubmitting(true);
+    try {
+      await onSubmit({ incident_type: type, severity, description });
+      // Reset form
+      setType('LANDSLIDE');
+      setSeverity('MODERATE');
+      setDescription('');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -90,10 +96,24 @@ export default function IncidentReportModal({ isOpen, onClose, onSubmit, current
 
           <button 
             type="submit"
-            className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all mt-4"
+            disabled={isSubmitting}
+            className={`w-full font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all mt-4 ${
+              isSubmitting 
+                ? 'bg-amber-600/50 text-white/70 cursor-not-allowed' 
+                : 'bg-amber-600 hover:bg-amber-500 text-white'
+            }`}
           >
-            <Send className="w-5 h-5" />
-            SUBMIT REPORT
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                PROCESSING...
+              </>
+            ) : (
+              <>
+                <Send className="w-5 h-5" />
+                SUBMIT REPORT
+              </>
+            )}
           </button>
         </form>
       </div>

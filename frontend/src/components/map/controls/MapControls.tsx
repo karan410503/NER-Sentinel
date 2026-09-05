@@ -1,33 +1,40 @@
+import { useState } from 'react';
 import { Layers, Map as MapIcon, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../../store';
+import IncidentReportModal from '../../../pages/driver/IncidentReportModal';
 
 export default function MapControls({ activeLayers, toggleLayer }: any) {
   const { emergencyMode, incidents, addIncident, removeIncident } = useAppStore();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const handleDisaster = () => {
-    const disasterId = 'demo-disaster-1';
-    const exists = incidents.find(i => i.id === disasterId);
-    
-    if (exists) {
-      removeIncident(disasterId);
-    } else {
-      addIncident({
-        id: disasterId,
-        type: 'Bridge Collapse / Landslide',
-        severity: 'CRITICAL',
-        location: [25.80, 91.80], // On the red route
-        reported_by: 'Automated Drone',
-        status: 'ACTIVE',
-        time: new Date().toLocaleTimeString(),
-        glowSize: 1.6
+    setIsModalOpen(true);
+  };
+
+  const handleModalSubmit = async (data: any) => {
+    try {
+      await fetch('http://localhost:8000/api/simulation/incident', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: 25.80, // Default demo location
+          longitude: 91.80,
+          type: data.incident_type
+        })
       });
+      setIsModalOpen(false);
+      // We could add it to local state, but the backend will broadcast it
+    } catch (err) {
+      console.error('Failed to trigger disaster:', err);
     }
   };
 
   const hasDisaster = incidents.some(i => i.id === 'demo-disaster-1');
 
   return (
-    <div className="absolute top-4 right-4 z-[400] flex flex-col gap-2">
+    <>
+    <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2 pointer-events-auto">
       <div className={`p-4 rounded-xl border backdrop-blur-md shadow-xl ${
         emergencyMode ? 'bg-black/80 border-red-500/50' : 'bg-[#0a0f1c]/90 border-white/10'
       }`}>
@@ -63,5 +70,14 @@ export default function MapControls({ activeLayers, toggleLayer }: any) {
         {hasDisaster ? 'Clear Disaster' : 'Trigger Disaster'}
       </button>
     </div>
+    
+    <IncidentReportModal 
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      onSubmit={handleModalSubmit}
+      currentLat={25.80}
+      currentLng={91.80}
+    />
+    </>
   );
 }
