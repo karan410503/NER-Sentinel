@@ -103,7 +103,6 @@ export default function NERMap() {
       {/* Custom Controls Overlays */}
       <MapControls activeLayers={activeLayers} toggleLayer={toggleLayer} />
       <MapLegend />
-      <RouteDetailsPanel />
     </div>
   );
 }

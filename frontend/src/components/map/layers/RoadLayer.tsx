@@ -1,4 +1,4 @@
-import { Polyline } from 'react-leaflet';
+import { Polyline, Popup } from 'react-leaflet';
 import { useAppStore } from '../../../store';
 
 function getRiskColor(riskScore: number): string {
@@ -29,10 +29,22 @@ export default function RoadLayer() {
             <Polyline 
               positions={positions} 
               pathOptions={{ color: 'transparent', weight: 20 }}
-              eventHandlers={{
-                click: () => setSelectedRouteId(route.id)
-              }}
-            />
+            >
+              <Popup className="text-sm text-gray-800 custom-popup">
+                <div className="p-1 min-w-[200px] text-white">
+                  <strong className="text-base font-bold text-white block mb-1">Route Details</strong>
+                  <div className="text-gray-300 text-xs mb-2">{route.origin} → {route.destination}</div>
+                  <div className="text-gray-300">Distance: {route.distance_km.toFixed(1)} km</div>
+                  <div className="text-gray-300">ETA: {Math.floor(route.estimated_time_minutes / 60)}h {Math.floor(route.estimated_time_minutes % 60)}m</div>
+                  <div className="mt-2 text-xs font-semibold text-gray-400">RISK SCORE: <span style={{ color }}>{route.risk_score.toFixed(0)} ({route.risk_level})</span></div>
+                  {route.factors && Object.keys(route.factors).length > 0 && (
+                    <div className="mt-1 text-[10px] text-gray-400">
+                      {Object.entries(route.factors).map(([k,v]) => `${k}: ${v}`).join(' | ')}
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Polyline>
             {/* Outer Glow / Shadow */}
             <Polyline 
               positions={positions} 

@@ -157,8 +157,13 @@ export default function VehicleLayer() {
           position={n.pos} 
           icon={createDivIcon(n.icon)}
         >
-          <Popup className="custom-popup">
-            <div className="font-semibold">{n.title}</div>
+          <Popup className="text-sm text-gray-800 custom-popup">
+            <div className="p-1 min-w-[150px] text-white">
+              <strong className="text-base font-bold text-white block mb-1">{n.title}</strong>
+              <span className="text-gray-300 block mb-1">Type: {n.title.toLowerCase().includes('hospital') ? 'Medical Center' : 'Logistics Hub'}</span>
+              <div className="text-xs text-gray-400">Lat: {n.pos[0].toFixed(4)}</div>
+              <div className="text-xs text-gray-400">Lng: {n.pos[1].toFixed(4)}</div>
+            </div>
           </Popup>
         </Marker>
       ))}
