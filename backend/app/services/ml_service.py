@@ -5,7 +5,7 @@ import logging
 from app.services.weather_service import weather_service
 from app.services.news_service import news_service
 from app.core.database import SessionLocal
-from app.models.incident import Incident
+from app.models.incident import Incident, IncidentType
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
