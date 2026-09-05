@@ -57,6 +57,7 @@ interface AppState {
   addVehicle: (vehicle: Vehicle) => void;
   addIncident: (incident: Incident) => void;
   removeIncident: (id: string) => void;
+  fetchVehicles: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -64,18 +65,7 @@ export const useAppStore = create<AppState>((set) => ({
   selectedRouteId: null,
   setRoutes: (routes) => set({ routes }),
   setSelectedRouteId: (id) => set({ selectedRouteId: id }),
-  vehicles: [
-    { 
-      id: 'v1', vehicle_number: 'NE-12-AB-1234', type: 'Medicine Truck', driver: 'Rahul S.', 
-      status: 'MOVING', location: [26.1445, 91.7362], destination: [24.8333, 92.7789], speed: 60, eta: 'Calculating...', risk: 18, cargo: 'High (Medical/Emergency)',
-      currentRoute: [[26.1445, 91.7362], [24.8333, 92.7789]], targetPointIndex: 1, progress: 0, isRerouted: false, isInitialized: false
-    },
-    { 
-      id: 'v2', vehicle_number: 'NE-01-XX-9876', type: 'Food Supply', driver: 'Amit B.', 
-      status: 'MOVING', location: [26.1445, 91.7362], destination: [25.5788, 91.8933], speed: 45, eta: 'Calculating...', risk: 45, cargo: 'Normal (Essential Supplies)',
-      currentRoute: [[26.1445, 91.7362], [25.5788, 91.8933]], targetPointIndex: 1, progress: 0, isRerouted: false, isInitialized: false
-    },
-  ],
+  vehicles: [],
   incidents: [],
   emergencyMode: false,
   selectedVehicleId: null,
@@ -98,4 +88,32 @@ export const useAppStore = create<AppState>((set) => ({
   removeIncident: (id) => set((state) => ({
     incidents: state.incidents.filter(i => i.id !== id)
   })),
+  fetchVehicles: async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/vehicles/');
+      const data = await res.json();
+      
+      const mappedVehicles = data.map((v: any) => ({
+        id: v.id,
+        vehicle_number: v.vehicle_number,
+        type: v.vehicle_type || 'Truck',
+        driver: v.driver_name || 'Unknown',
+        status: v.status,
+        location: [v.current_latitude, v.current_longitude],
+        destination: v.geometry && v.geometry.length > 0 ? v.geometry[v.geometry.length - 1] : [0, 0],
+        speed: v.speed || 0,
+        eta: 'In transit',
+        risk: 20, 
+        cargo: v.cargo_type || 'Cargo',
+        currentRoute: v.geometry || [],
+        targetPointIndex: 1,
+        progress: 0,
+        isRerouted: false,
+        isInitialized: true
+      }));
+      set({ vehicles: mappedVehicles });
+    } catch (error) {
+      console.error('Failed to fetch vehicles:', error);
+    }
+  }
 }));

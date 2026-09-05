@@ -51,47 +51,8 @@ export default function DatasetUploadModal({ isOpen, onClose }: Props) {
     try {
       const response = await predictionsApi.uploadDataset(file);
       
-      // Also insert some of the data from the CSV into the project store as vehicles
-      try {
-        const text = await file.text();
-        const rows = text.split('\n').slice(1, 6); // Take first 5 rows, skip header
-        
-        rows.forEach((row, index) => {
-          if (!row.trim()) return;
-          const cols = row.split(',');
-          // origin(0), destination(1), vehicle_type(2), vehicle_type_encoded(3), base_distance_km(4), weather_severity(5), terrain_complexity(6), actual_eta_minutes(7), has_disruption(8)
-          const vehicleType = cols[2] || 'Truck';
-          const etaMinutes = cols[7] ? Math.round(parseFloat(cols[7])) : 120;
-          const risk = cols[8] === '1' ? 85 : 15;
-          
-          useAppStore.getState().addVehicle({
-            id: `v_csv_${Date.now()}_${index}`,
-            vehicle_number: `CSV-${Math.floor(Math.random() * 9000) + 1000}`,
-            type: vehicleType,
-            driver: 'Auto Assigned',
-            status: 'MOVING',
-            location: [26.1445 + (Math.random() * 0.1), 91.7362 + (Math.random() * 0.1)], // Randomish location near Guwahati
-            destination: [25.5788 + (Math.random() * 0.1), 91.8933 + (Math.random() * 0.1)], // Randomish location near Shillong
-            speed: Math.floor(Math.random() * 40) + 30,
-            eta: `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60}m`,
-            risk: risk,
-            cargo: risk > 50 ? 'High (Medical/Emergency)' : 'Normal Cargo',
-            currentRoute: [
-              [26.1445, 91.7362],
-              [25.80, 91.80],
-            ],
-            targetPointIndex: 1,
-            progress: 0,
-            isRerouted: false,
-            isInitialized: false
-          });
-        });
-      } catch (e) {
-        console.error("Failed to parse CSV for frontend insertion:", e);
-      }
-
       setStatus('success');
-      setMessage('Models successfully trained with the new dataset! The data has been inserted into your active fleet.');
+      setMessage(response.message || 'Models successfully trained and vehicles inserted from CSV.');
       setMetrics(response.metrics);
     } catch (error: any) {
       setStatus('error');

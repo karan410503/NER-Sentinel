@@ -13,7 +13,7 @@ export default function Dashboard() {
   const [criticalAlerts, setCriticalAlerts] = useState<SystemAlert[]>([]);
   
   // Get dynamic routes from the global store
-  const { routes } = useAppStore();
+  const { routes, fetchVehicles } = useAppStore();
   const setRoutes = useAppStore(state => state.setRoutes);
   
   useEffect(() => {
@@ -40,10 +40,11 @@ export default function Dashboard() {
       const alerts = await alertsApi.getInitialAlerts();
       setCriticalAlerts(alerts.slice(0, 3)); // Only show top 3 on dashboard
       
-      // Also fetch routes for dashboard
+      // Also fetch routes and vehicles for dashboard
       import('../services/routeApi').then(({ routeApi }) => {
         routeApi.getAllRoutes().then(setRoutes);
       });
+      fetchVehicles();
     } catch (err) {
       console.error("Failed to fetch dashboard data:", err);
     }

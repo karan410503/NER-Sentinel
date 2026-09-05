@@ -65,6 +65,11 @@ export default function DriverDashboard() {
   
   const wsRef = useRef<WebSocket | null>(null);
   const watchIdRef = useRef<number | null>(null);
+  const vehicleRef = useRef<any>(null);
+
+  useEffect(() => {
+    vehicleRef.current = vehicle;
+  }, [vehicle]);
 
   // Fetch initial data
   useEffect(() => {
@@ -102,8 +107,16 @@ export default function DriverDashboard() {
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'NEW_INCIDENT') {
-          setIncidentAlert(`Alert: ${data.incident_type} reported nearby!`);
+          setIncidentAlert(`Alert: ${data.incident.type} reported nearby!`);
           setTimeout(() => setIncidentAlert(null), 10000);
+        } else if (data.type === 'REROUTE_RECOMMENDED' && String(data.vehicle_id) === String(vehicleRef.current?.id)) {
+          if (window.confirm(`URGENT: ${data.reason}\nNew ETA: ${data.new_eta} mins.\nAccept alternative route?`)) {
+            setRouteCoords(data.new_geometry);
+          }
+        } else if (data.type === 'DRIVER_LOCATION' && String(data.vehicle_id) === String(vehicleRef.current?.id)) {
+          setLocation([data.lat, data.lng]);
+          setSpeed(data.speed || 0);
+          setGpsStatus('CONNECTED');
         }
       } catch (err) {
         console.error('WS parse error:', err);

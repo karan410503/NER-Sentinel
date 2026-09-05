@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api import predictions, deliveries, vehicles, analytics, alerts, admin, gis, ws, auth, driver, warehouses, routes
+from app.api import predictions, deliveries, vehicles, analytics, alerts, admin, gis, ws, auth, driver, warehouses, routes, simulation
 from app.services.ml_service import ml_service
 from contextlib import asynccontextmanager
 
@@ -45,3 +45,4 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(driver.router, prefix="/api/driver", tags=["Driver"])
 app.include_router(warehouses.router, prefix="/api/warehouses", tags=["Warehouses"])
 app.include_router(ws.router, tags=["WebSockets"])
+app.include_router(simulation.router, prefix="/api/simulation", tags=["Simulation"])
