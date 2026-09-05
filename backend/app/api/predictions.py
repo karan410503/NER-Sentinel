@@ -32,7 +32,7 @@ class DisruptionForecastResponse(BaseModel):
     recommendation: str
 
 @router.get("/eta", response_model=EtaPredictionResponse)
-def get_eta_prediction(
+async def get_eta_prediction(
     origin: str = Query(..., description="Origin hub"),
     destination: str = Query(..., description="Destination location"),
     vehicle_type: str = Query(..., description="Vehicle type")
@@ -40,7 +40,18 @@ def get_eta_prediction(
     """
     Get the AI predicted ETA using the XGBoost model.
     """
-    return ml_service.predict_eta(origin, destination, vehicle_type)
+    orig_coords = routing_service.geocode(origin)
+    dest_coords = routing_service.geocode(destination)
+    if not orig_coords:
+        orig_coords = (26.1445, 91.7362)
+    if not dest_coords:
+        dest_coords = (25.5788, 91.8933)
+
+    route_info = routing_service.get_route(orig_coords, dest_coords)
+    distance = route_info["distance_km"] if route_info else 100.0
+    duration = route_info["duration_minutes"] if route_info else 120.0
+
+    return await ml_service.predict_eta(origin, destination, vehicle_type, distance, duration, dest_coords)
 
 @router.get("/disruptions", response_model=List[DisruptionForecastResponse])
 def get_disruptions():

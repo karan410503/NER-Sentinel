@@ -110,21 +110,37 @@ export default function PredictionsPage() {
           <div className="space-y-4 mb-6">
             <div>
               <label className="block text-xs font-bold text-gray-400 tracking-wider mb-2">ORIGIN</label>
-              <input 
-                type="text" 
+              <select 
                 value={etaOrigin}
                 onChange={(e) => setEtaOrigin(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 transition-colors"
-              />
+                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500/50 transition-colors"
+              >
+                <option>Guwahati Hub</option>
+                <option>Shillong Medical Center</option>
+                <option>Tezpur Base</option>
+                <option>Imphal Station</option>
+                <option>Aizawl Depot</option>
+                <option>Dimapur Outpost</option>
+                <option>Kohima Hub</option>
+                <option>Tawang Base</option>
+              </select>
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-400 tracking-wider mb-2">DESTINATION</label>
-              <input 
-                type="text" 
+              <select 
                 value={etaDestination}
                 onChange={(e) => setEtaDestination(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 transition-colors"
-              />
+                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500/50 transition-colors"
+              >
+                <option>Guwahati Hub</option>
+                <option>Shillong Medical Center</option>
+                <option>Tezpur Base</option>
+                <option>Imphal Station</option>
+                <option>Aizawl Depot</option>
+                <option>Dimapur Outpost</option>
+                <option>Kohima Hub</option>
+                <option>Tawang Base</option>
+              </select>
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-400 tracking-wider mb-2">VEHICLE PROFILE</label>
