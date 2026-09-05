@@ -109,23 +109,49 @@ const createDivIcon = (component: React.ReactElement, size: [number, number] = [
 };
 
 export default function VehicleLayer() {
-  const { vehicles } = useAppStore();
+  const { vehicles, routes } = useAppStore();
   const [popupInfo, setPopupInfo] = useState<any>(null);
 
-  const hubs = [
+  // Dynamically extract hubs (source/destination) from active routes
+  const dynamicHubs: any[] = [];
+  const seenNodes = new Set<string>();
+
+  routes.forEach(route => {
+    if (route.geometry && route.geometry.length > 0) {
+      const start = route.geometry[0];
+      const end = route.geometry[route.geometry.length - 1];
+      
+      const startKey = `${start[0]},${start[1]}`;
+      const endKey = `${end[0]},${end[1]}`;
+      
+      if (!seenNodes.has(startKey)) {
+        seenNodes.add(startKey);
+        dynamicHubs.push({ 
+          pos: start, 
+          icon: <HubIcon />, 
+          title: route.origin || 'Source' 
+        });
+      }
+      
+      if (!seenNodes.has(endKey)) {
+        seenNodes.add(endKey);
+        dynamicHubs.push({ 
+          pos: end, 
+          icon: <HospitalIcon />, 
+          title: route.destination || 'Destination' 
+        });
+      }
+    }
+  });
+
+  const hubsToRender = dynamicHubs.length > 0 ? dynamicHubs : [
     { pos: [26.1445, 91.7362] as [number, number], icon: <HubIcon />, title: 'Guwahati Hub' },
-    { pos: [25.5788, 91.8933] as [number, number], icon: <HubIcon />, title: 'Shillong Hub' },
-    { pos: [24.8333, 92.7789] as [number, number], icon: <HospitalIcon />, title: 'Silchar Hospital' },
-    { pos: [26.10, 92.90] as [number, number], icon: <NodeIcon text="102" glowColor="#06b6d4" borderColor="#22d3ee" dot={true} />, title: 'Stop 102' },
-    { pos: [25.40, 92.85] as [number, number], icon: <NodeIcon text="101" glowColor="#94a3b8" borderColor="#cbd5e1" />, title: 'Stop 101' },
-    { pos: [24.90, 92.80] as [number, number], icon: <NodeIcon text="104" glowColor="#06b6d4" borderColor="#22d3ee" />, title: 'Stop 104' },
-    { pos: [24.92, 92.85] as [number, number], icon: <NodeIcon text="105" borderColor="#94a3b8" />, title: 'Stop 105' },
-    { pos: [25.20, 92.15] as [number, number], icon: <NodeIcon text="103" glowColor="#94a3b8" borderColor="#cbd5e1" />, title: 'Stop 103' },
+    { pos: [25.5788, 91.8933] as [number, number], icon: <HospitalIcon />, title: 'Shillong Hub' }
   ];
 
   return (
     <>
-      {hubs.map((n, i) => (
+      {hubsToRender.map((n, i) => (
         <Marker 
           key={'hub-'+i} 
           position={n.pos} 
@@ -151,11 +177,11 @@ export default function VehicleLayer() {
               eventHandlers={{ remove: () => setPopupInfo(null) }}
               className="text-sm text-gray-800 custom-popup"
             >
-              <div className="p-1 min-w-[150px]">
-                <strong className="text-base text-gray-800 block mb-1">{v.vehicle_number}</strong>
-                <span className="text-gray-600 block">{v.type}</span>
+              <div className="p-1 min-w-[150px] text-white">
+                <strong className="text-base font-bold text-white block mb-1">{v.vehicle_number}</strong>
+                <span className="text-gray-300 block">{v.type}</span>
                 <div className="mt-1">
-                  Status: <span className="font-semibold" style={{color: v.status === 'REROUTING' ? '#ca8a04' : '#059669'}}>{v.status}</span>
+                  Status: <span className="font-bold" style={{color: v.status === 'REROUTING' ? '#fbbf24' : '#34d399'}}>{v.status}</span>
                 </div>
                 <div>Speed: {v.speed.toFixed(1)} km/h</div>
                 {v.cargo && <div>Cargo: {v.cargo}</div>}
